@@ -82,6 +82,40 @@ def process_delete(message):
     # Сбрасываем флаги в user_data
     user_data[message.chat.id] = None
 
+@bot.message_handler(commands=['complete'])
+def complete_task(message):
+    tasks_list = Task.objects.all()
+    
+    if tasks_list:
+        keyboard = telebot.types.ReplyKeyboardMarkup(row_width=1, resize_keyboard=True)
+        for task in tasks_list:
+            if not task.completed:
+                button_text = f"{task.title} - Не выполнено"
+                keyboard.add(button_text)
+
+        if keyboard:
+            bot.send_message(message.chat.id, "Выберите задачу для отметки как выполненную:", reply_markup=keyboard)
+            # Устанавливаем флаг текущего шага в 'complete'
+            user_data[message.chat.id] = 'complete'
+        else:
+            bot.send_message(message.chat.id, "Все задачи уже выполнены.")
+    else:
+        bot.send_message(message.chat.id, "Список задач пуст. Используй /add, чтобы добавить новую задачу.")
+
+@bot.message_handler(func=lambda message: user_data.get(message.chat.id) == 'complete')
+def process_complete(message):
+    task_title = message.text.split(" - ")[0]
+    try:
+        task = Task.objects.get(title=task_title)
+        task.completed = True
+        task.save()
+        bot.send_message(message.chat.id, f"Задача '{task.title}' отмечена как выполненная.")
+    except Task.DoesNotExist:
+        bot.send_message(message.chat.id, f"Задача с названием '{task_title}' не найдена.")
+    
+    # Сбрасываем флаги в user_data
+    user_data[message.chat.id] = None
+
 @bot.message_handler(func=lambda message: True)
 def echo_all(message):
     bot.reply_to(message, message.text)
