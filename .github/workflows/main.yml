@@ -24,7 +24,7 @@ jobs:
         run: |
           python manage.py test
           sshpass -p ${{ secrets.PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@195.49.215.121 -p 22 "
-            cd ~/workspace-Sultan/project &&
+            cd ubuntu/workspace-Sultan/project &&
             source ./venv/bin/activate &&
             git pull &&
             python manage.py migrate &&
