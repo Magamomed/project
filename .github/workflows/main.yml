@@ -23,7 +23,12 @@ jobs:
       - name: Run Tests and Deployment
         run: |
           python manage.py test
-          sshpass -p ${{ secrets.PASSWORD }} ssh -o StrictHostKeyChecking=no ${{ secrets.USERNAME }}@195.49.215.121 -p 22 "
+          with:
+            host: 195.49.215.121
+            username: ${{ secrets.USERNAME }}
+            password: ${{ secrets.PASSWORD }}
+            port: 22
+            script: |
             cd ~/workspace-Sultan/project &&
             source ./venv/bin/activate &&
             sudo git pull &&
