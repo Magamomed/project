@@ -1,5 +1,5 @@
 name: Deploy
-on:
+on: 
   push:
     branches:
       - main
@@ -9,31 +9,36 @@ jobs:
     strategy:
       max-parallel: 4
       matrix:
-        python-version: [3.9]
+        python-version: [3.11.4]
+        
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Python ${{ matrix.python-version }} 
-        uses: actions/setup-python@v3
-        with:
-          python-version: ${{ matrix.python-version }} 
-      - name: Install Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-      - name: Run Tests and Deployment
-        run: |
-          python manage.py test
-          with:
-            host: 195.49.215.121
-            username: ${{ secrets.USERNAME }}
-            password: ${{ secrets.PASSWORD }}
-            port: 22
-            script: |
-            cd ~/workspace-Sultan/project &&
-            source ./venv/bin/activate &&
-            sudo git pull &&
-            python manage.py migrate &&
-            python manage.py collectstatic --noinput &&
-            supervisorctl restart all"
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python ${{ matrix.python-version }}
+      uses: actions/setup-python@v3
+      with:
+        python-version: ${{ matrix.python-version }}
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r helpdesk/requirements.txt
+    - name: Run Tests
+      run: |
+        cd helpdesk
+        python manage.py test
+    - name: executing remote ssh commands using password
+      uses: appleboy/ssh-action@master
+      with:
+        host: 195.49.215.121
+        username: ${{ secrets.USERNAME }}
+        password: ${{ secrets.PASSWORD }}
+        port: 22
+        script: |
+          cd /home/ubuntu/workspace-Sultan/project
+          source ./venv/bin/activate
+          git pull
+          python manage.py migrate
+          python manage.py collectstatic --noinput
+          supervisorctl restart all
 
 
